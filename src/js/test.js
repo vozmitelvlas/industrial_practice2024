@@ -1,4 +1,15 @@
 
+const measureTextCache = {};
+
+function measureTextWidth(value) {
+    if (measureTextCache[value]) {
+        return measureTextCache[value];
+    }
+    const width = context.measureText(value.toString()).width;
+    measureTextCache[value] = width;
+    return width;
+}
+
 function check_float_part(n) {
     // возвращает кол-во знаком после запятой
     const text = n.toString();
@@ -39,7 +50,7 @@ function check_width_values(x0, x1, numLabels){
     return tmp_width;
 }
 
-function check_x0_x1_positions(x0, x1, numLabels){
+function check_x0_x1_positions(x0, x1){
     // исправляет позиции x0 и x1, если для их отоборажения требуется больше места
     let width_x0 = context.measureText(x0.toString()).width / 2;
     let width_x1 = context.measureText(x1.toString()).width / 2;
@@ -57,7 +68,7 @@ function grid(ctx, x0, x1, numLabels) {
     if(numLabels !== 0){
         context.clearRect(0, 0, canvas.width, canvas.height);
     }
-    check_x0_x1_positions(x0, x1, numLabels)
+    check_x0_x1_positions(x0, x1)
 
     while(check_width_values(x0, x1, numLabels) > canvas.width - 50){
         numLabels -= 1;
@@ -89,18 +100,17 @@ function define_reals(cnt, x0, x1, wheel){
         if(wheel === 1){
             new_x0 = Math.round(x0 + (x1 - x0) / numLabels)
             new_x1 = Math.round(x0 + (numLabels - 1) * ((x1 - x0) / numLabels))
-            arr_of_dx.push(new_x0 - real_x0)
+            arr_of_dx.push([new_x0 - real_x0, real_x1 - new_x1])
         }
         if(wheel === -1 && arr_of_dx.length !== 0){
             let tmp_dx = arr_of_dx.pop()
-            new_x0 = x0 - tmp_dx
-            new_x1 = x1 + tmp_dx
+            new_x0 = x0 - tmp_dx[0]
+            new_x1 = x1 + tmp_dx[1]
         }
     }
-    
+
     return [new_x0, new_x1];
 }
-
 
 const canvas = document.getElementById('grid');
 const context = canvas.getContext('2d');
@@ -108,6 +118,16 @@ context.fillStyle = 'black';
 context.textAlign = 'center';
 context.font = "11pt Inter"
 
+let arr_of_dx = []
+let start = 20;
+let end = context.canvas.width - 20;
+let dx = 65; // минимальное расстояние между подписями
+let start_x0 = 10000;
+let start_x1 = 100000;
+let real_x0 = start_x0
+let real_x1 = start_x1
+let numLabels = generate_NumLabels(context, start_x0, start_x1);
+grid(context, start_x0, start_x1, numLabels);
 
 const zoomIntensity = 0.2;
 let scale = 1;
@@ -145,14 +165,3 @@ canvas.onwheel = (event) => {
         grid(context, real_x0, real_x1, numLabels);
     }
 }
-
-let arr_of_dx = []
-let start = 20;
-let end = context.canvas.width - 20;
-let dx = 65; // минимальное расстояние между подписями
-let start_x0 = 1;
-let start_x1 = 222;
-let real_x0 = start_x0
-let real_x1 = start_x1
-let numLabels = generate_NumLabels(context, start_x0, start_x1);
-grid(context, start_x0, start_x1, numLabels);
