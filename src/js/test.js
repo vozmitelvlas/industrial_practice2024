@@ -29,7 +29,7 @@ function generate_NumLabels(ctx, x0, x1) {
     const requiredSpace = (x1 - x0) / numLabels * labelWidth; // необходимое пространство
 
     if (requiredSpace > (end - start)) {
-        return Math.floor(numLabels /2)
+        return Math.floor(numLabels / 2)
     } else {
         return numLabels;
     }
@@ -38,19 +38,16 @@ function generate_NumLabels(ctx, x0, x1) {
 function check_width_values(x0, x1, numLabels){
     // вычисляет общую длину всех чисел
     let tmp_width = context.measureText(x0.toString()).width + context.measureText(x1.toString()).width
+
     for (let i = 1; i < numLabels; i++) {
-
         let tmp_value =  (x0 + i * ((x1 - x0) / numLabels))
-        if(check_float_part(tmp_value) > 2){
-
-            tmp_value = tmp_value.toFixed(2)
-        }
         tmp_width += context.measureText(tmp_value.toString()).width
     }
+
     return tmp_width;
 }
 
-function check_x0_x1_positions(x0, x1){
+function fix_x0_x1_positions(x0, x1){
     // исправляет позиции x0 и x1, если для их отоборажения требуется больше места
     let width_x0 = context.measureText(x0.toString()).width / 2;
     let width_x1 = context.measureText(x1.toString()).width / 2;
@@ -61,35 +58,8 @@ function check_x0_x1_positions(x0, x1){
     if(end + width_x1 > canvas.width){
         end -= end + width_x1 - canvas.width
     }
-}
-
-function grid(ctx, x0, x1, numLabels) {
-    //определение записей, позиций и отрисовка
-    if(numLabels !== 0){
-        context.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    check_x0_x1_positions(x0, x1)
-
-    while(check_width_values(x0, x1, numLabels) > canvas.width - 50){
-        numLabels -= 1;
-    }
-
-    const dx = (end - start) / numLabels;
-    for (let i = 0; i <= numLabels; i++) {
-        if(i === numLabels){
-            ctx.fillText(x1, start + i * dx, ctx.canvas.height - 10);
-            break;
-        }
-
-        let x = start + i * dx; // позиция
-        let value = x0 + i * ((x1 - x0) / numLabels); // запись
-        if (i !== 0 && i !== numLabels && check_float_part(value) > 2){
-            value = value.toFixed(2);
-        }
-
-        if (x >= start && x <= end) {
-            ctx.fillText(value, x, ctx.canvas.height - 10);
-        }
+    if(Math.floor(start - width_x0) > 0){
+        start -= start - width_x0
     }
 }
 
@@ -112,20 +82,56 @@ function define_reals(cnt, x0, x1, wheel){
     return [new_x0, new_x1];
 }
 
+function grid(ctx, x0, x1, numLabels) {
+    //определение записей, позиций и отрисовка
+    if(numLabels !== 0){
+        context.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    fix_x0_x1_positions(x0, x1)
+
+    while(check_width_values(x0, x1, numLabels) > canvas.width - 50){
+        numLabels -= 1;
+    }
+
+    const dx = (end - start) / numLabels;
+    for (let i = 0; i <= numLabels; i++) {
+        if(i === numLabels){
+            ctx.fillText(x1, start + i * dx, ctx.canvas.height - 10);
+            break;
+        }
+
+        let x = start + i * dx; // позиция
+        let value = x0 + i * ((x1 - x0) / numLabels); // запись
+
+        if(x1 - x0 > 10){
+            value = Math.floor(value)
+        }
+        else{
+            if (i !== 0 && check_float_part(value) > 2){
+                value = value.toFixed(2);
+            }
+        }
+
+        if (x >= start && x <= end) {
+            ctx.fillText(value, x, ctx.canvas.height - 10);
+        }
+    }
+}
+
 const canvas = document.getElementById('grid');
 const context = canvas.getContext('2d');
 context.fillStyle = 'black';
 context.textAlign = 'center';
-context.font = "11pt Inter"
+context.font = "11pt Inter";
 
-let arr_of_dx = []
+let start_x0 = 1;
+let start_x1 = 100;
+let arr_of_dx = [];
 let start = 20;
 let end = context.canvas.width - 20;
 let dx = 65; // минимальное расстояние между подписями
-let start_x0 = 10000;
-let start_x1 = 100000;
-let real_x0 = start_x0
-let real_x1 = start_x1
+let real_x0 = start_x0;
+let real_x1 = start_x1;
 let numLabels = generate_NumLabels(context, start_x0, start_x1);
 grid(context, start_x0, start_x1, numLabels);
 
@@ -147,7 +153,7 @@ canvas.onwheel = (event) => {
     visibleHeight = canvas.height / scale;
     scale *= zoom;
 
-    if(wheel === 1 && dx > 43){
+    if(wheel === 1 && dx > 57){
         if(dx <= 65){
             [real_x0, real_x1] = define_reals(context, real_x0, real_x1, wheel);
         }
