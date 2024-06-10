@@ -94,6 +94,7 @@ function grid(ctx, x0, x1, numLabels) {
     }
 
     const dx = (end - start) / numLabels;
+
     for (let i = 0; i <= numLabels; i++) {
         if(i === numLabels){
             ctx.fillText(x1, start + i * dx, ctx.canvas.height - 10);
@@ -124,8 +125,8 @@ context.fillStyle = 'black';
 context.textAlign = 'center';
 context.font = "11pt Inter";
 
-let start_x0 = 1;
-let start_x1 = 100;
+let start_x0 = 111;
+let start_x1 = 2222;
 let arr_of_dx = [];
 let start = 20;
 let end = context.canvas.width - 20;
@@ -170,4 +171,11 @@ canvas.onwheel = (event) => {
         numLabels = generate_NumLabels(context, real_x0, real_x1)
         grid(context, real_x0, real_x1, numLabels);
     }
+}
+
+function loop(){
+    requestAnimationFrame(() =>{
+        grid(context, real_x0, real_x1, numLabels);
+        loop();
+    })
 }
